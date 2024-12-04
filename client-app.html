@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books Library</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            object-fit: cover;
+            object-position: 50% 50%;
+        }
+        .book {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .book:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .book h2 {
+            margin: 0 0 10px;
+            font-size: 1.5em;
+            color: #4CAF50;
+        }
+        .book p {
+            margin: 5px 0;
+        }
+        .book-category {
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAuZjWAGtLkAAYEgUAyZOrAEMwIgA1KhIAo77/ADguFwCQbM4AelmpAD0rHQAyKQwArJ7pAB8cCgBrS44AoK/6AIZt3gAaFAUAm6z5AKO9/wC5l9UAkHLUAEIvIQCejuwAmIbhAF9EVgBsTJEAo73+AJ6L6wDBkb8AupfUAGtMkAD+/v4AXUNQAI5rzABAMyQAvZHLADAoCgCdjewAno3sAEw4PABdQ08AHRoKAGG5rgCVgdsAgmC4ACskCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACsmJgsrKyYmKwAAAAAAAAArLy8rKysrDisAAAAAAAAAEgMDEhISEgMSAAAAAAAAABImFxISEhImEgAAAAAAAAASEhISEhIsDBIAAAAAAAAAJiYFIiISBQUSAAAAAAAAACYIJCAGEiYmEgAAAAAAAAAiGyICGioFKQUAAAAAAAAAIi0uGQ8iAgkiAAAAAAAAACMYIxgRIwoWAgAAAAAAAAATFBwdBxgjJygAAAAAAAAABwcHBwcHISEHAAAAAAAAABAQEBAQEBAQEAAAAAAAAAANDQ0NDQ0NDQ0AAAAAAAAAJSUlJSUlFR8BAAAAAAAAAAQEBB4eHh4eHgAAAPAHAADwBwAA8AcAAPAHAADwBwAA8AcAAPAHAADwBwAA8AcAAPAHAADwBwAA8AcAAPAHAADwBwAA8AcAAPAHAAA=" rel="icon" type="image/x-icon">   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Catalogo de Libros</h1>
+        <img src="https://w.wallhaven.cc/full/3l/wallhaven-3lepy9.jpg" height="150px" alt="Library Image" class="header-image">
+        <div id="books"></div>
+    </div>
+
+    <script>
+        const booksContainer = document.getElementById('books');
+
+        async function fetchBooks() {
+            try {
+                const response = await fetch('http://143.244.168.138/libros');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const books = await response.json();
+                displayBooks(books);
+            } catch (error) {
+                console.error('Failed to fetch books:', error);
+            }
+        }
+
+        function displayBooks(books) {
+            booksContainer.innerHTML = '';
+            books.forEach(book => {
+                const bookDiv = document.createElement('div');
+                bookDiv.classList.add('book');
+                bookDiv.innerHTML = `
+                    <h2>${book.titulo}</h2>
+                    <p><strong>Autor:</strong> ${book.autor}</p>
+                    <p><strong>Numero de Paginas:</strong> ${book.numPag}</p>
+                    <p><strong>Categoria:</strong> ${book.categoria}</p>
+                    <p><strong>Año de publicación:</strong> ${book.año}</p>
+                `;
+                booksContainer.appendChild(bookDiv);
+            });
+        }
+
+        fetchBooks();
+    </script>
+</body>
+</html>

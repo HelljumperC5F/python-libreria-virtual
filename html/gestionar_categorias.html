@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorias Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestionar Categorias</h1>
+
+    <div class="container">
+        <h2>Lista de Categorias</h2>
+        <button onclick="fetchCategorias()">Cargar Categorias</button>
+        <ul id="categoria-list"></ul>
+    </div>
+
+    <div class="container">
+        <h2>Buscar Categoria</h2>
+        <input type="number" id="search-codigo" placeholder="Codigo" min="1" max="2000">
+        <button onclick="fetchCategoriaByCodigo()">Buscar</button>
+        <div id="categoria-details" class="message"></div>
+    </div>
+
+    <div class="container">
+        <h2>Crear Categoria</h2>
+        <input type="number" id="create-codigo" placeholder="Codigo" min="1" max="2000">
+        <input type="text" id="create-nombre" placeholder="Nombre">
+        <button onclick="createCategoria()">Crear</button>
+        <div id="create-message" class="message"></div>
+    </div>
+
+    <div class="container">
+        <h2>Actualizar Categoria</h2>
+        <input type="number" id="update-codigo" placeholder="Codigo" min="1" max="2000">
+        <input type="text" id="update-nombre" placeholder="Nuevo Nombre">
+        <button onclick="updateCategoria()">Actualizar</button>
+        <div id="update-message" class="message"></div>
+    </div>
+
+    <div class="container">
+        <h2>Eliminar Categoria</h2>
+        <input type="number" id="delete-codigo" placeholder="Codigo" min="1" max="2000">
+        <button onclick="deleteCategoria()">Eliminar</button>
+        <div id="delete-message" class="message"></div>
+    </div>
+
+    <script>
+        async function fetchCategorias() {
+            const response = await fetch('/categorias');
+            const categorias = await response.json();
+            const categoriaList = document.getElementById('categoria-list');
+            categoriaList.innerHTML = '';
+            categorias.forEach(categoria => {
+                const li = document.createElement('li');
+                li.textContent = `${categoria.codigo}: ${categoria.nombre}`;
+                categoriaList.appendChild(li);
+            });
+        }
+
+        async function fetchCategoriaByCodigo() {
+            const codigo = document.getElementById('search-codigo').value;
+            const response = await fetch(`/categorias/${codigo}`);
+            const categoria = await response.json();
+            const categoriaDetails = document.getElementById('categoria-details');
+            const li = document.createElement('li');
+
+            if (codigo == '') {
+                categoriaDetails.textContent = `Ningun campo puede estar vacio`;
+                categoriaDetails.className = `message error`;
+                categoriaDetails.style.display = 'block';
+                return;
+            }
+            if (codigo < 1) {
+                categoriaDetails.textContent = `El codigo no puede ser menor a 1`;
+                categoriaDetails.className = `message error`;
+                categoriaDetails.style.display = 'block';
+                return;
+            }
+            if (response.status === 422) {
+                categoriaDetails.textContent = `${categoria.detail[0].msg}`;
+            }
+            if (response.status === 404) {
+                categoriaDetails.textContent = `${categoria.message}`;
+            }
+            if (response.status === 200) {
+                categoriaDetails.textContent = `${categoria.nombre}`;
+            } 
+            categoriaDetails.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+            categoriaDetails.style.display = 'block';
+        }
+
+        async function createCategoria() {
+            const codigo = document.getElementById('create-codigo').value;
+            const createMessage = document.getElementById('create-message');
+            if (codigo < 1) {
+                createMessage.textContent = `Codigo no puede ser menor que 1`;
+                createMessage.className = `message error`;
+                createMessage.style.display = 'block';
+                return;
+            }
+            const nombre = document.getElementById('create-nombre').value;
+            const response = await fetch('/categorias', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ codigo: parseInt(codigo), nombre })
+            });
+            const message = await response.json();
+            if (codigo == '' || nombre == '') {
+                createMessage.textContent = `Ningun campo puede estar vacio`;
+                createMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+                createMessage.style.display = 'block';
+                return;
+            }
+            createMessage.textContent = message.message;
+            createMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+            createMessage.style.display = 'block';
+        }
+
+        async function updateCategoria() {
+            const codigo = document.getElementById('update-codigo').value;
+            const nombre = document.getElementById('update-nombre').value;
+            const response = await fetch(`/categorias/${codigo}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nombre })
+            });
+            const message = await response.json();
+            const updateMessage = document.getElementById('update-message');
+            if (codigo == '' || nombre == '') {
+                updateMessage.textContent = `Ningun campo puede estar vacio`;
+                updateMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+                updateMessage.style.display = 'block';
+                return;
+            }
+            updateMessage.textContent = message.message;
+            updateMessage.className = `message ${response.status === 202 ? 'success' : 'error'}`;
+            updateMessage.style.display = 'block';
+        }
+
+        async function deleteCategoria() {
+            const codigo = document.getElementById('delete-codigo').value;
+            const response = await fetch(`/categorias/${codigo}`, {
+                method: 'DELETE'
+            });
+            const message = await response.json();
+            const deleteMessage = document.getElementById('delete-message');
+            if (codigo == '') {
+                deleteMessage.textContent = `Ningun campo puede estar vacio`;
+                deleteMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+                deleteMessage.style.display = 'block';
+                return;
+            }
+            deleteMessage.textContent = message.message;
+            deleteMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+            deleteMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

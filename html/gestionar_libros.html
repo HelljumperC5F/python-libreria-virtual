@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libros Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestionar Libros</h1>
+
+    <div class="container">
+        <h2>Lista de Libros</h2>
+        <button onclick="fetchLibros()">Cargar Libros</button>
+        <ul id="libro-list"></ul>
+    </div>
+
+    <div class="container">
+        <h2>Buscar Libro</h2>
+        <input type="number" id="search-codigo" placeholder="Codigo" min="1" max="2000">
+        <button onclick="fetchLibroByCodigo()">Buscar</button>
+        <div id="libro-details" class="message"></div>
+    </div>
+
+    <div class="container">
+        <h2>Crear Libro</h2>
+        <input type="number" id="create-codigo" placeholder="Codigo" min="1" max="2000">
+        <input type="text" id="create-titulo" placeholder="Titulo">
+        <input type="text" id="create-autor" placeholder="Autor">
+        <input type="text" id="create-año" placeholder="Año">
+        <input type="text" id="create-categoria" placeholder="Categoria">
+        <input type="text" id="create-numPag" placeholder="Numero de Paginas">
+        <button onclick="createLibro()">Crear</button>
+        <div id="create-message" class="message"></div>
+    </div>
+
+    <div class="container">
+        <h2>Actualizar Libro</h2>
+        <input type="number" id="update-codigo" placeholder="Codigo" min="1" max="2000">
+        <input type="text" id="update-titulo" placeholder="Titulo">
+        <input type="text" id="update-autor" placeholder="Autor">
+        <input type="text" id="update-año" placeholder="Año">
+        <input type="text" id="update-categoria" placeholder="Categoria">
+        <input type="text" id="update-numPag" placeholder="Numero de Paginas">
+        <button onclick="updateLibro()">Actualizar</button>
+        <div id="update-message" class="message"></div>
+    </div>
+
+    <div class="container">
+        <h2>Eliminar Libro</h2>
+        <input type="number" id="delete-codigo" placeholder="Codigo" min="1" max="2000">
+        <button onclick="deleteLibro()">Eliminar</button>
+        <div id="delete-message" class="message"></div>
+    </div>
+
+    <script>
+        async function fetchLibros() {
+            const response = await fetch('/libros');
+            const libros = await response.json();
+            const libroList = document.getElementById('libro-list');
+            libroList.innerHTML = '';
+            libros.forEach(libro => {
+                const li = document.createElement('li');
+                li.textContent = `${libro.codigo}: ${libro.titulo}, ${libro.autor}, ${libro.año}, ${libro.categoria}, ${libro.numPag} paginas`;
+                libroList.appendChild(li);
+            });
+        }
+    
+        async function fetchLibroByCodigo() {
+            const codigo = document.getElementById('search-codigo').value;
+            const response = await fetch(`/libros/${codigo}`);
+            const libro = await response.json();
+            const libroDetails = document.getElementById('libro-details');
+            const li = document.createElement('li');
+    
+            if (codigo == '') {
+                libroDetails.textContent = `Ningun campo puede estar vacio`;
+                libroDetails.className = `message error`;
+                libroDetails.style.display = 'block';
+                return;
+            }
+            if (codigo < 1) {
+                libroDetails.textContent = `El codigo no puede ser menor a 1`;
+                libroDetails.className = `message error`;
+                libroDetails.style.display = 'block';
+                return;
+            }
+            if (response.status === 422) {
+                libroDetails.textContent = `${libro.detail[0].msg}`;
+            }
+            if (response.status === 404) {
+                libroDetails.textContent = `${libro.message}`;
+            }
+            if (response.status === 200) {
+                libroDetails.textContent = `${libro.titulo}, ${libro.autor}, ${libro.año}, ${libro.categoria}, ${libro.numPag} paginas`;
+            } 
+    
+            libroDetails.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+            libroDetails.style.display = 'block';
+        }
+    
+        async function createLibro() {
+            const codigo = document.getElementById('create-codigo').value;
+            const titulo = document.getElementById('create-titulo').value;
+            const autor = document.getElementById('create-autor').value;
+            const año = document.getElementById('create-año').value;
+            const categoria = document.getElementById('create-categoria').value;
+            const numPag = document.getElementById('create-numPag').value;
+            const createMessage = document.getElementById('create-message');
+            if (codigo == '' || titulo == '' || autor == '' || año == '' || categoria == '' || numPag == '') {
+                createMessage.textContent = `Ningun campo puede estar vacio`;
+                createMessage.className = `message error`;
+                createMessage.style.display = 'block';
+                return;
+            }
+            if (codigo < 1) {
+                createMessage.textContent = `El codigo no puede ser menor a 1`;
+                createMessage.className = `message error`;
+                createMessage.style.display = `block`;
+                return;
+            }
+            const response = await fetch(`/libros`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ titulo, autor, año, categoria, numPag })
+            });
+            const message = await response.json();
+            createMessage.textContent = message.message;
+            createMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+            createMessage.style.display = 'block';
+        }
+    
+        async function updateLibro() {
+            const codigo = document.getElementById('update-codigo').value;
+            const titulo = document.getElementById('update-titulo').value;
+            const autor = document.getElementById('update-autor').value;
+            const año = document.getElementById('update-año').value;
+            const categoria = document.getElementById('update-categoria').value;
+            const numPag = document.getElementById('update-numPag').value;
+            const updateMessage = document.getElementById('update-message');
+            if (codigo == '' || titulo == '' || autor == '' || año == '' || categoria == '' || numPag == '') {
+                updateMessage.textContent = `Ningun campo puede estar vacio`;
+                updateMessage.className = `message error`;
+                updateMessage.style.display = 'block';
+                return;
+            }
+            if (codigo < 1) {
+                updateMessage.textContent = `El codigo no puede ser menor a 1`;
+                updateMessage.className = `message error`;
+                updateMessage.style.display = `block`;
+                return;
+            }
+            const response = await fetch(`/libros/${codigo}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ titulo, autor, año, categoria, numPag })
+            });
+            const message = await response.json();
+            updateMessage.textContent = message.message;
+            updateMessage.className = `message ${response.status === 202 ? 'success' : 'error'}`;
+            updateMessage.style.display = 'block';
+        }
+    
+        async function deleteLibro() {
+            const codigo = document.getElementById('delete-codigo').value;
+            const response = await fetch(`/libros/${codigo}`, {
+                method: 'DELETE'
+            });
+            const message = await response.json();
+            const deleteMessage = document.getElementById('delete-message');
+            if (codigo == '') {
+                deleteMessage.textContent = `Ningun campo puede estar vacio`;
+                deleteMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+                deleteMessage.style.display = 'block';
+                return;
+            }
+            deleteMessage.textContent = message.message;
+            deleteMessage.className = `message ${response.status === 200 ? 'success' : 'error'}`;
+            deleteMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
